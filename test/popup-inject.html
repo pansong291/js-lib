@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <title>popup-inject</title>
+</head>
+<body>
+
+</body>
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+<script src="../src/popup-inject.js"></script>
+<script>
+    window.paso.injectPopup({
+        namespace: 'test',
+        content: `<button class="button" type="button">Random</button>
+            <input type="text" class="input">`,
+        onPopShow() {
+            console.log('popup show')
+        },
+        onPopHide() {
+            console.log('popup hide')
+        }
+    }).then(result => {
+        const { $popup } = result
+        const $input = $popup.find('.input')
+        $popup.find('.button').click(() => {
+            $input.val(Math.random())
+        })
+    })
+</script>
+</html>
