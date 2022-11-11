@@ -2,6 +2,7 @@
     'use strict';
 
     const _injectHtml = (config, resolve) => {
+        const $ = window.jQuery
         let $doc = $(document)
         $(document.head).append(`
             <style>
@@ -202,7 +203,7 @@
         if (!config.namespace.trim()) throw new Error('config.namespace can not be blank.')
     }
 
-    if (!window.$) throw new ReferenceError('This library needs to be dependent on jQuery.')
+    if (!window.jQuery) throw new ReferenceError('This library needs to be dependent on jQuery.')
     if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
     window.paso.injectPopup = (config) => {
         _checkConfig(config)
