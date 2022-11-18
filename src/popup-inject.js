@@ -1,10 +1,10 @@
 ;(function () {
-    'use strict';
+  'use strict'
 
-    const _injectHtml = (config, resolve) => {
-        const $ = window.jQuery
-        let $doc = $(document)
-        $(document.head).append(`
+  const _injectHtml = (config, resolve) => {
+    const $ = window.jQuery
+    let $doc = $(document)
+    $(document.head).append(`
             <style>
                 .${config.namespace} {
                     color: black;
@@ -109,117 +109,130 @@
                 }
                 ${config.style}
             </style>`)
-        const $container = $(`<div class="${config.namespace}"/>`)
-        const $stickyBar = $(`<div class="sticky-bar">${config.actionName}</div>`)
-        const $mask = $(`<div class="mask"/>`)
-        const $popup = $(`<div class="popup flex gap-2">${config.content}</div>`)
-        $container.append($stickyBar).append($mask)
-        $mask.append($popup)
+    const $container = $(`<div class="${config.namespace}"/>`)
+    const $stickyBar = $(`<div class="sticky-bar">${config.actionName}</div>`)
+    const $mask = $(`<div class="mask"/>`)
+    const $popup = $(`<div class="popup flex gap-2">${config.content}</div>`)
+    $container.append($stickyBar).append($mask)
+    $mask.append($popup)
 
-        let clickPanel = false
-        $mask.mousedown(leftKey(() => {
-            clickPanel = true
-        })).mouseup(leftKey(() => {
-            if (clickPanel) {
-                $mask.css('display', 'none')
-                $stickyBar.css('display', 'flex')
-                config.onPopHide && config.onPopHide()
-            }
-            clickPanel = false
-        }))
-
-        const popupClick = leftKey(e => {
-            clickPanel = false
-            e.stopPropagation()
+    let clickPanel = false
+    $mask
+      .mousedown(
+        leftKey(() => {
+          clickPanel = true
         })
-        $popup.mousedown(popupClick).mouseup(popupClick)
+      )
+      .mouseup(
+        leftKey(() => {
+          if (clickPanel) {
+            $mask.css('display', 'none')
+            $stickyBar.css('display', 'flex')
+            config.onPopHide && config.onPopHide()
+          }
+          clickPanel = false
+        })
+      )
 
-        let stickyBarTop
-        let stickyBarHeight
-        let mouseDown
-        let stickyClick
-        let lastAnimFrame
-        $stickyBar.mousedown(leftKey(e => {
-            stickyClick = true
-            stickyBarTop = getNumber($stickyBar.css('top'))
-            stickyBarHeight = $stickyBar.outerHeight()
-            mouseDown = e.pageY
-            $doc.on(`mousemove.${config.namespace}`, stickyMouseMove)
-                .on(`mouseup.${config.namespace}`, stickyMouseUp)
-        })).mouseup(leftKey(e => {
-            if (stickyClick) {
-                stickyClick = false
-                $stickyBar.css('display', 'none')
-                $mask.css('display', 'flex')
-                config.onPopShow && config.onPopShow()
-            }
-            stickyMouseUp()
-            e.stopPropagation()
-        }))
+    const popupClick = leftKey((e) => {
+      clickPanel = false
+      e.stopPropagation()
+    })
+    $popup.mousedown(popupClick).mouseup(popupClick)
 
-        function stickyMouseMove(e) {
+    let stickyBarTop
+    let stickyBarHeight
+    let mouseDown
+    let stickyClick
+    let lastAnimFrame
+    $stickyBar
+      .mousedown(
+        leftKey((e) => {
+          stickyClick = true
+          stickyBarTop = getNumber($stickyBar.css('top'))
+          stickyBarHeight = $stickyBar.outerHeight()
+          mouseDown = e.pageY
+          $doc.on(`mousemove.${config.namespace}`, stickyMouseMove).on(`mouseup.${config.namespace}`, stickyMouseUp)
+        })
+      )
+      .mouseup(
+        leftKey((e) => {
+          if (stickyClick) {
             stickyClick = false
-            if (lastAnimFrame) cancelAnimationFrame(lastAnimFrame)
-            lastAnimFrame = requestAnimationFrame(() => {
-                let height = document.documentElement.clientHeight - stickyBarHeight
-                let newTop = stickyBarTop + e.pageY - mouseDown
-                if (newTop >= 0 && newTop <= height) {
-                    $stickyBar.css('top', `${newTop}px`)
-                }
-            })
-        }
-
-        const stickyMouseUp = leftKey(() => {
-            $doc.off(`.${config.namespace}`)
+            $stickyBar.css('display', 'none')
+            $mask.css('display', 'flex')
+            config.onPopShow && config.onPopShow()
+          }
+          stickyMouseUp()
+          e.stopPropagation()
         })
+      )
 
-        $(document.body).append($container)
-        // ---- other code
-        resolve && resolve({$container, $stickyBar, $mask, $popup})
-    }
-
-    function leftKey(fn) {
-        return (...args) => {
-            let key = args && args[0] && args[0].button
-            if (key === 0 || key === void 0) {
-                fn.apply(this, args)
-            }
+    function stickyMouseMove(e) {
+      stickyClick = false
+      if (lastAnimFrame) cancelAnimationFrame(lastAnimFrame)
+      lastAnimFrame = requestAnimationFrame(() => {
+        let height = document.documentElement.clientHeight - stickyBarHeight
+        let newTop = stickyBarTop + e.pageY - mouseDown
+        if (newTop >= 0 && newTop <= height) {
+          $stickyBar.css('top', `${newTop}px`)
         }
+      })
     }
 
-    function getNumber(str) {
-        if (str) {
-            let mArr = str.match(/\d+(\.\d*)?|\.\d+/)
-            if (mArr && mArr.length) {
-                return parseFloat(mArr[0])
-            }
-        }
-        return void 0
-    }
+    const stickyMouseUp = leftKey(() => {
+      $doc.off(`.${config.namespace}`)
+    })
 
-    function _checkConfig(config) {
-        if (!config) throw new Error('config is required. you should call window.paso.injectPopup(config)')
-        if (!config.namespace) throw new Error('config.namespace is required and it cannot be empty.')
-        if (!config.namespace.trim()) throw new Error('config.namespace can not be blank.')
-    }
+    $(document.body).append($container)
+    // ---- other code
+    resolve && resolve({ $container, $stickyBar, $mask, $popup })
+  }
 
-    if (!window.jQuery) throw new ReferenceError('This library needs to be dependent on jQuery.')
-    if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
-    window.paso.injectPopup = (config) => {
-        _checkConfig(config)
-        const _config = Object.assign({}, {
-            namespace: '',
-            actionName: 'Action',
-            location: '25%',
-            content: '<label>Hello World</label>',
-            style: '',
-            onPopShow() {
-            },
-            onPopHide() {
-            }
-        }, config)
-        return new Promise(resolve => {
-            _injectHtml(_config, resolve)
-        })
+  function leftKey(fn) {
+    return (...args) => {
+      let key = args && args[0] && args[0].button
+      if (key === 0 || key === void 0) {
+        fn.apply(this, args)
+      }
     }
-})();
+  }
+
+  function getNumber(str) {
+    if (str) {
+      let mArr = str.match(/\d+(\.\d*)?|\.\d+/)
+      if (mArr && mArr.length) {
+        return parseFloat(mArr[0])
+      }
+    }
+    return void 0
+  }
+
+  function _checkConfig(config) {
+    if (!config) throw new Error('config is required. you should call window.paso.injectPopup(config)')
+    if (!config.namespace) throw new Error('config.namespace is required and it cannot be empty.')
+    if (!config.namespace.trim()) throw new Error('config.namespace can not be blank.')
+  }
+
+  if (!window.jQuery) throw new ReferenceError('This library needs to be dependent on jQuery.')
+  if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
+  window.paso.injectPopup = (config) => {
+    _checkConfig(config)
+    const _config = Object.assign(
+      {},
+      {
+        namespace: '',
+        actionName: 'Action',
+        location: '25%',
+        content: '<label>Hello World</label>',
+        style: '',
+        onPopShow() {},
+        onPopHide() {}
+      },
+      config
+    )
+    return new Promise((resolve) => {
+      _injectHtml(_config, resolve)
+    })
+  }
+})()

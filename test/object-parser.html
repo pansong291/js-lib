@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-cmn-Hans">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>object-parser</title>
-</head>
-<body>
-
-</body>
-<script src="../src/object-parser.js"></script>
-<script>
-    const {objectParser} = window.paso
+  </head>
+  <body></body>
+  <script src="../src/object-parser.js"></script>
+  <script>
+    const { objectParser } = window.paso
     const target = {}
     objectParser.parsePathOf(target, '.configs[0].behavior', 'test')
     console.log(target)
     const pre = document.createElement('pre')
     pre.innerText = JSON.stringify(target, null, 2)
     document.body.append(pre)
-</script>
+  </script>
 </html>
