@@ -5,7 +5,7 @@
    * @type {{}}
    */
   const stringEscape = {
-    0: '\0',
+    [0]: '\0',
     b: '\b',
     t: '\t',
     n: '\n',
@@ -22,7 +22,25 @@
    * @returns {*} 指定对象中对应路径的值
    */
   function getValue(target, pathStr) {
-    // TODO
+    let path = pathStr
+    let cur = target
+    while (path) {
+      let parseResult = null
+      const symbol = path.charAt(0)
+      if (symbol === '.') {
+        parseResult = parseDotMark(path)
+      } else if (symbol === '[') {
+        parseResult = parseSquareBrackets(path)
+      }
+      if (!parseResult || parseResult.error) throw new Error(`illegal path string: ${pathStr}`)
+      if (!cur || !(cur instanceof Object)) {
+        const deepPath = pathStr.substring(0, pathStr.lastIndexOf(path))
+        throw new Error(`the value of "<target>${deepPath}" is not a(n) object/array`)
+      }
+      cur = cur[parseResult.field]
+      path = parseResult.nextPath
+    }
+    return cur
   }
 
   /**
@@ -39,7 +57,7 @@
     const root = { target }
     let cur = root
     let field = 'target'
-    while (true) {
+    while (path) {
       let parseResult = null
       // 必须以 . 或 [ 开头
       const symbol = path.charAt(0)
@@ -54,16 +72,13 @@
         cur[field] = parseResult.value
       } else if (!(cur[field] instanceof Object)) {
         const deepPath = pathStr.substring(0, pathStr.lastIndexOf(path))
-        throw new Error(`the value of "<root>${deepPath}" is not a(n) object/array`)
+        throw new Error(`the value of "<target>${deepPath}" is not a(n) object/array`)
       }
       cur = cur[field]
       field = parseResult.field
       path = parseResult.nextPath
-      if (!path) {
-        cur[field] = value
-        break
-      }
     }
+    cur[field] = value
     return root.target
   }
 
