@@ -144,7 +144,6 @@
     let stickyBarHeight
     let mouseDown
     let stickyClick
-    let lastAnimFrame
     $stickyBar
       .mousedown(
         leftKey((e) => {
@@ -170,8 +169,7 @@
 
     function stickyMouseMove(e) {
       stickyClick = false
-      if (lastAnimFrame) cancelAnimationFrame(lastAnimFrame)
-      lastAnimFrame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
         let height = document.documentElement.clientHeight - stickyBarHeight
         let newTop = stickyBarTop + e.pageY - mouseDown
         if (newTop >= 0 && newTop <= height) {
