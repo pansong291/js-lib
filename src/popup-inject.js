@@ -22,6 +22,7 @@
                     position: fixed;
                     top: ${config.location};
                     left: 0;
+                    transform: translateX(calc(12px - 100%));
                     z-index: 99999999;
                     background: #3D7FFF;
                     color: white;
@@ -29,6 +30,10 @@
                     cursor: pointer;
                     user-select: none;
                     border-radius: 0 12px 12px 0;
+                    transition: transform 0.5s ease;
+                }
+                .${config.namespace} .sticky-bar:hover {
+                    transform: none;
                 }
                 .${config.namespace} .mask {
                     height: 100vh;
