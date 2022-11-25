@@ -209,7 +209,7 @@
   function _checkConfig(config) {
     if (!config) throw new Error('config is required. you should call window.paso.injectPopup(config)')
     if (!config.namespace) throw new Error('config.namespace is required and it cannot be empty.')
-    if (!config.namespace.trim()) throw new Error('config.namespace can not be blank.')
+    if (!/^[-\w]+$/.test(config.namespace)) throw new Error('config.namespace must match the regex /^[-\\w]+$/.')
   }
 
   if (!window.jQuery) throw new ReferenceError('This library needs to be dependent on jQuery.')
