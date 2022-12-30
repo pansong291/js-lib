@@ -14,6 +14,8 @@ jsdelivr 在国内的访问速度不算稳定，可使用一些反向代理网�
 ## 其他
 国内加速服务的域名列表
 
+https://ghproxy.com/
+
 原域名|加速域名
 ---|---
 `cdnjs.cloudflare.com`|`cdnjs.cdn.haah.net`
