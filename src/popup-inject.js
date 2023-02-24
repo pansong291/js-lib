@@ -112,7 +112,7 @@
                     border-right-width: 1px;
                     outline: 0;
                 }
-                ${config.style}
+                ${config.style.replaceAll(/<\/?style>/g, '')}
             </style>`)
     const $container = $(`<div class="${config.namespace}"/>`)
     const $stickyBar = $(`<div class="sticky-bar">${config.actionName}</div>`)
