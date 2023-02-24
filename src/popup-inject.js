@@ -141,7 +141,6 @@
 
     const popupClick = leftKey((e) => {
       clickPanel = false
-      e.stopPropagation()
     })
     $popup.mousedown(popupClick).mouseup(popupClick)
 
