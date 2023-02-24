@@ -22,7 +22,7 @@
                     position: fixed;
                     top: ${config.location};
                     left: 0;
-                    transform: translateX(calc(12px - 100%));
+                    transform: translateX(calc(12px - ${config.collapse}));
                     z-index: 99999999;
                     background: #3D7FFF;
                     color: white;
@@ -225,6 +225,7 @@
       {
         namespace: '',
         actionName: 'Action',
+        collapse: '100%',
         location: '25%',
         content: '<label>Hello World</label>',
         style: '',
