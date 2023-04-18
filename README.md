@@ -11,6 +11,8 @@ jsdelivr 在国内的访问速度不算稳定，可使用一些反向代理网�
 
 只需将 `cdn.jsdelivr.net` 替换为 `js.cdn.haah.net` 即可。
 
+备用 `fastly.jsdelivr.net`。
+
 ## 其他
 国内加速服务的域名列表
 
@@ -29,5 +31,5 @@ https://ghproxy.com/
 `cdn.jsdelivr.net`|`js.cdn.haah.net`
 
 ## 使用样例
-* https://js.cdn.haah.net/gh/pansong291/js-lib@v1.0.0/src/popup-inject.min.js
-* https://js.cdn.haah.net/gh/pansong291/js-lib@v1.0.0/src/object-parser.min.js
+* https://fastly.jsdelivr.net/gh/pansong291/js-lib@v1.0.0/src/popup-inject.min.js
+* https://fastly.jsdelivr.net/gh/pansong291/js-lib@v1.0.0/src/object-parser.min.js
