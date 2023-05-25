@@ -123,28 +123,12 @@
     $container.append($stickyBar).append($mask)
     $mask.append($popup)
 
-    let clickPanel = false
-    $mask
-      .mousedown(
-        leftKey(() => {
-          clickPanel = true
-        })
-      )
-      .mouseup(
-        leftKey(() => {
-          if (clickPanel) {
-            $mask.css('display', 'none')
-            $stickyBar.css('display', 'flex')
-            config.onPopHide && config.onPopHide()
-          }
-          clickPanel = false
-        })
-      )
-
-    const popupClick = leftKey((e) => {
-      clickPanel = false
+    $mask.click(() => {
+      $mask.css('display', 'none')
+      $stickyBar.css('display', 'flex')
+      config.onPopHide && config.onPopHide()
     })
-    $popup.mousedown(popupClick).mouseup(popupClick)
+    $popup.click((e) => e.stopPropagation())
 
     let stickyBarTop
     let stickyBarHeight
