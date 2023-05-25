@@ -39,22 +39,24 @@
             transform: none;
         }
         .${config.namespace} .mask {
-            height: 100vh;
-            width: 100vw;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            inset: 0;
+            padding: 24px;
+            overflow: auto;
             z-index: 99999999;
-            background: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
             display: none;
             align-items: center;
             justify-content: center;
+            pointer-events: all;
         }
         .${config.namespace} .popup {
+            position: relative;
+            margin: auto;
             padding: 16px;
             background: #f0f2f5;
             border-radius: 2px;
+            box-shadow: 0 1px 12px 2px rgba(0, 0, 0, 0.4);
         }
         .${config.namespace} label {
             margin-top: .5em;
