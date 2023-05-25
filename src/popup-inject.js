@@ -50,6 +50,9 @@
             justify-content: center;
             pointer-events: all;
         }
+        .${config.namespace}.open .mask {
+            display: flex;
+        }
         .${config.namespace} .popup {
             position: relative;
             margin: auto;
@@ -124,8 +127,7 @@
     $mask.append($popup)
 
     $mask.click(() => {
-      $mask.css('display', 'none')
-      $stickyBar.css('display', 'flex')
+      $container.removeClass('open')
       config.onPopHide && config.onPopHide()
     })
     $popup.click((e) => e.stopPropagation())
@@ -148,8 +150,7 @@
         leftKey((e) => {
           if (stickyClick) {
             stickyClick = false
-            $stickyBar.css('display', 'none')
-            $mask.css('display', 'flex')
+            $container.addClass('open')
             config.onPopShow && config.onPopShow()
           }
           stickyMouseUp()
