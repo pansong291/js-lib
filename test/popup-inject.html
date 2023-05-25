@@ -12,7 +12,7 @@
       .injectPopup({
         namespace: 'test',
         content: `<button class="button" type="button">Random</button>
-            <input type="text" class="input">`,
+            <div class="container"></div>`,
         onPopShow() {
           console.log('popup show')
         },
@@ -22,9 +22,9 @@
       })
       .then((result) => {
         const { $popup } = result
-        const $input = $popup.find('.input')
+        const $container = $popup.find('.container')
         $popup.find('.button').click(() => {
-          $input.val(Math.random())
+          $container.append(`<p>${Math.random()}</p>`)
         })
       })
   </script>
