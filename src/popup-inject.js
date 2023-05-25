@@ -45,13 +45,16 @@
             overflow: auto;
             z-index: 99999999;
             background-color: rgba(0, 0, 0, 0.4);
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: all;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .6s;
         }
         .${config.namespace}.open .mask {
-            display: flex;
+            opacity: 1;
+            pointer-events: all;
         }
         .${config.namespace} .popup {
             position: relative;
@@ -60,6 +63,11 @@
             background: #f0f2f5;
             border-radius: 2px;
             box-shadow: 0 1px 12px 2px rgba(0, 0, 0, 0.4);
+            transform: scale(0);
+            transition: transform .3s;
+        }
+        .${config.namespace}.open .popup {
+            transform: scale(1);
         }
         .${config.namespace} label {
             margin-top: .5em;
