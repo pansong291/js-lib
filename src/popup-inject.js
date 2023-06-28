@@ -12,6 +12,18 @@
         .${config.namespace} * {
             box-sizing: border-box;
         }
+        .${config.namespace} *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .${config.namespace} *::-webkit-scrollbar-thumb {
+            border-radius: 4px;
+            background-color: rgb(0 0 0 / 50%);
+        }
+        .${config.namespace} *::-webkit-scrollbar-track {
+            border-radius: 4px;
+            background-color: transparent;
+        }
         .${config.namespace} .flex {
             display: flex;
             flex-direction: row;
