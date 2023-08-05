@@ -33,3 +33,5 @@ https://ghproxy.com/
 ## 使用样例
 * https://fastly.jsdelivr.net/gh/pansong291/js-lib@v1.0.0/src/popup-inject.min.js
 * https://fastly.jsdelivr.net/gh/pansong291/js-lib@v1.0.0/src/object-parser.min.js
+* https://ghproxy.com/https://github.com/pansong291/js-lib/raw/v1.0.3/src/popup-inject.js
+* https://ghproxy.com/https://raw.githubusercontent.com/pansong291/js-lib/v1.0.3/src/popup-inject.js
