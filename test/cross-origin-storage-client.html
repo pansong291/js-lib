@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>cross-origin-storage-client</title>
+  <style>
+    pre {
+      box-shadow: 0 2px 12px 8px #0003;
+      padding: 1em;
+      margin: 2em;
+      font-family: v-mono, Consolas, SFMono-Regular, Menlo, Courier, v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, monospace, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+  </style>
+</head>
+<body>
+<pre id="result"></pre>
+</body>
+<script src="../src/cross-origin-storage.js"></script>
+<script>
+  const resultPre = document.getElementById('result')
+  const { crossOriginStorage } = window.paso
+  const middlewareUrl = 'cross-origin-storage-server.html'
+  const storageClient = crossOriginStorage.createStorageClient(middlewareUrl)
+  storageClient.setItem('person-name', '小明').then(() => {
+    resultPre.append('存入数据 person-name: 小明\n')
+  })
+  const data1 = { 'person-age': 15, 'person-gender': '男' }
+  storageClient.setItem(data1).then(() => {
+    resultPre.append(`存入数据 data1: ${JSON.stringify(data1)}\n`)
+  })
+  const data2 = { 'person-info': { '爱好': ['书法', '游泳', '下棋'], '学历': '中学' } }
+  storageClient.setItem(data2).then(() => {
+    resultPre.append(`存入数据 data2: ${JSON.stringify(data2)}\n`)
+  })
+  storageClient.getItem('person-name').then((response) => {
+    resultPre.append(`获取数据 person-name: ${response.data}\n`)
+  })
+  storageClient.getItem({ 'person-name': void 0, 'person-age': '' }).then((response) => {
+    resultPre.append(`获取数据: ${JSON.stringify(response.data)}\n`)
+  })
+  storageClient.getItem(['person-name', 'person-age', 'person-gender']).then((response) => {
+    resultPre.append(`获取数据: ${JSON.stringify(response.data)}\n`)
+  })
+  storageClient.getItem('person-info').then((response) => {
+    resultPre.append(`获取数据 person-info: ${JSON.stringify(response.data)}\n`)
+  })
+</script>
+</html>
