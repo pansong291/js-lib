@@ -45,6 +45,7 @@
             cursor: pointer;
             user-select: none;
             border-radius: 0 12px 12px 0;
+            box-shadow: 0 2px 4px 1px #0006;
             transition: transform 0.5s ease;
         }
         .${config.namespace} .sticky-bar:hover {
