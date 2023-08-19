@@ -5,7 +5,6 @@
     <title>popup-inject</title>
   </head>
   <body></body>
-  <script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
   <script src="../src/popup-inject.js"></script>
   <script>
     window.paso
@@ -24,11 +23,11 @@
         }
       })
       .then((result) => {
-        const { $popup } = result
-        const $container = $popup.find('.container')
-        $popup.find('.button').click(() => {
-          $container.append(`<p>${Math.random()}</p>`)
-        })
+        const { popup } = result
+        const container = popup.querySelector('.container')
+        popup.querySelector('.button').onclick = () => {
+          container.insertAdjacentHTML('beforeend', `<p>${Math.random()}</p>`)
+        }
       })
   </script>
 </html>

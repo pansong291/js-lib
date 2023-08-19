@@ -2,9 +2,9 @@
   'use strict'
 
   const _injectHtml = (config, resolve) => {
-    const $ = window.jQuery
-    let $doc = $(document)
-    $(document.head).append(`
+    document.head.insertAdjacentHTML(
+      'beforeend',
+      `
       <style>
         .${config.namespace} {
             color: black;
@@ -18,7 +18,7 @@
         }
         .${config.namespace} *::-webkit-scrollbar-thumb {
             border-radius: 4px;
-            background-color: rgb(0 0 0 / 50%);
+            background-color: rgba(0, 0, 0, 0.5);
         }
         .${config.namespace} *::-webkit-scrollbar-track {
             border-radius: 4px;
@@ -139,64 +139,81 @@
             outline: 0;
         }
         ${config.style.replaceAll(/<\/?style>/g, '')}
-      </style>`)
-    const $container = $(`<div class="${config.namespace}"/>`)
-    const $stickyBar = $(`<div class="sticky-bar">${config.actionName}</div>`)
-    const $mask = $(`<div class="mask"/>`)
-    const $popup = $(`<div class="popup flex col">${config.content}</div>`)
-    $container.append($stickyBar).append($mask)
-    $mask.append($popup)
+      </style>`
+    )
+    const container = createElement('div', { class: config.namespace })
+    const stickyBar = createElement('div', { class: 'sticky-bar' }, config.actionName)
+    const mask = createElement('div', { class: 'mask' })
+    const popup = createElement('div', { class: 'popup flex col' }, config.content)
+    container.append(stickyBar, mask)
+    mask.append(popup)
 
-    $mask.click(() => {
-      $container.removeClass('open')
+    mask.onclick = () => {
+      container.classList.remove('open')
       config.onPopHide && config.onPopHide()
-    })
-    $popup.click((e) => e.stopPropagation())
+    }
+    popup.onclick = (e) => e.stopPropagation()
 
-    let stickyBarTop
-    let stickyBarHeight
-    let mouseDown
-    let stickyClick
-    $stickyBar
-      .mousedown(
-        leftKey((e) => {
-          stickyClick = true
-          stickyBarTop = getNumber($stickyBar.css('top'))
-          stickyBarHeight = $stickyBar.outerHeight()
-          mouseDown = e.pageY
-          $doc.on(`mousemove.${config.namespace}`, stickyMouseMove).on(`mouseup.${config.namespace}`, stickyMouseUp)
-        })
-      )
-      .mouseup(
-        leftKey((e) => {
-          if (stickyClick) {
-            stickyClick = false
-            $container.addClass('open')
-            config.onPopShow && config.onPopShow()
-          }
-          stickyMouseUp()
-          e.stopPropagation()
-        })
-      )
+    const _data = {
+      stickyBarHeight: 0,
+      innerOffset: 0,
+      stickyBarClick: false
+    }
 
-    function stickyMouseMove(e) {
-      stickyClick = false
+    const stickyMouseMove = (e) => {
+      _data.stickyBarClick = false
       requestAnimationFrame(() => {
-        let height = document.documentElement.clientHeight - stickyBarHeight
-        let newTop = stickyBarTop + e.pageY - mouseDown
+        let height = document.documentElement.clientHeight - _data.stickyBarHeight
+        let newTop = e.pageY - _data.innerOffset
         if (newTop >= 0 && newTop <= height) {
-          $stickyBar.css('top', `${newTop}px`)
+          stickyBar.style.top = `${newTop}px`
         }
       })
     }
 
     const stickyMouseUp = leftKey(() => {
-      $doc.off(`.${config.namespace}`)
+      document.removeEventListener('mousemove', stickyMouseMove)
+      document.removeEventListener('mouseup', stickyMouseUp)
     })
 
-    $(document.body).append($container)
+    stickyBar.onmousedown = leftKey((e) => {
+      _data.stickyBarClick = true
+      const stickyBarStyle = window.getComputedStyle(stickyBar)
+      _data.innerOffset = e.pageY - getNumber(stickyBarStyle.top)
+      _data.stickyBarHeight =
+        stickyBar.clientHeight + getNumber(stickyBarStyle.borderTopWidth) + getNumber(stickyBarStyle.borderBottomWidth)
+      document.addEventListener('mousemove', stickyMouseMove)
+      document.addEventListener('mouseup', stickyMouseUp)
+    })
+
+    stickyBar.onmouseup = leftKey((e) => {
+      if (_data.stickyBarClick) {
+        _data.stickyBarClick = false
+        container.classList.add('open')
+        config.onPopShow && config.onPopShow()
+      }
+      stickyMouseUp()
+      e.stopPropagation()
+    })
+
+    document.body.append(container)
     // ---- other code
-    resolve && resolve({ $container, $stickyBar, $mask, $popup })
+    resolve && resolve({ container, stickyBar, mask, popup })
+  }
+
+  function createElement(tag, attrs, children) {
+    const el = document.createElement(tag)
+    if (attrs) {
+      Object.entries(attrs).forEach(([k, v]) => {
+        el.setAttribute(k, v)
+      })
+    }
+    if (children instanceof HTMLElement) {
+      el.append(children)
+    } else if (typeof children === 'string') {
+      el.innerHTML = children
+    }
+    return el
   }
 
   function leftKey(fn) {
@@ -224,7 +241,6 @@
     if (!/^[-\w]+$/.test(config.namespace)) throw new Error('config.namespace must match the regex /^[-\\w]+$/.')
   }
 
-  if (!window.jQuery) throw new ReferenceError('This library needs to be dependent on jQuery.')
   if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
   window.paso.injectPopup = (config) => {
     _checkConfig(config)
