@@ -5,7 +5,7 @@
     document.head.insertAdjacentHTML(
       'beforeend',
       `
-      <style>
+      <style data-namespace="${config.namespace}">
         .${config.namespace} {
             color: black;
         }
