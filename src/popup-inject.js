@@ -141,7 +141,7 @@
         ${config.style.replaceAll(/<\/?style>/g, '')}
       </style>`
     )
-    const container = createElement('div', { class: config.namespace })
+    const container = createElement('div', { class: config.namespace, 'data-version': 'v1.0.5' })
     const stickyBar = createElement('div', { class: 'sticky-bar' }, config.actionName)
     const mask = createElement('div', { class: 'mask' })
     const popup = createElement('div', { class: 'popup flex col' }, config.content)
