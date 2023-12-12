@@ -141,60 +141,34 @@
         ${config.style.replaceAll(/<\/?style>/g, '')}
       </style>`
     )
-    const container = createElement('div', { class: config.namespace, 'data-version': 'v1.0.5' })
+    const container = createElement('div', { class: config.namespace, 'data-version': 'v1.0.6' })
     const stickyBar = createElement('div', { class: 'sticky-bar' }, config.actionName)
     const mask = createElement('div', { class: 'mask' })
     const popup = createElement('div', { class: 'popup flex col' }, config.content)
     container.append(stickyBar, mask)
     mask.append(popup)
 
-    mask.onclick = () => {
+    excludeClick(mask, popup, () => {
       container.classList.remove('open')
       config.onPopHide && config.onPopHide()
-    }
-    popup.onclick = (e) => e.stopPropagation()
-
-    const _data = {
-      stickyBarHeight: 0,
-      innerOffset: 0,
-      stickyBarClick: false
-    }
-
-    const stickyMouseMove = (e) => {
-      _data.stickyBarClick = false
-      requestAnimationFrame(() => {
-        let height = document.documentElement.clientHeight - _data.stickyBarHeight
-        let newTop = e.pageY - _data.innerOffset
-        if (newTop >= 0 && newTop <= height) {
-          stickyBar.style.top = `${newTop}px`
-        }
-      })
-    }
-
-    const stickyMouseUp = leftKey(() => {
-      document.removeEventListener('mousemove', stickyMouseMove)
-      document.removeEventListener('mouseup', stickyMouseUp)
     })
 
-    stickyBar.onmousedown = leftKey((e) => {
-      _data.stickyBarClick = true
-      const stickyBarStyle = window.getComputedStyle(stickyBar)
-      _data.innerOffset = e.pageY - getNumber(stickyBarStyle.top)
-      _data.stickyBarHeight =
-        stickyBar.clientHeight + getNumber(stickyBarStyle.borderTopWidth) + getNumber(stickyBarStyle.borderBottomWidth)
-      document.addEventListener('mousemove', stickyMouseMove)
-      document.addEventListener('mouseup', stickyMouseUp)
-    })
-
-    stickyBar.onmouseup = leftKey((e) => {
-      if (_data.stickyBarClick) {
-        _data.stickyBarClick = false
+    withDrag(
+      stickyBar,
+      (e, d) => {
+        requestAnimationFrame(() => {
+          let height = document.documentElement.clientHeight - d.outerHeight
+          let newTop = e.pageY - d.innerOffsetY
+          if (newTop >= 0 && newTop <= height) {
+            stickyBar.style.top = `${newTop}px`
+          }
+        })
+      },
+      () => {
         container.classList.add('open')
         config.onPopShow && config.onPopShow()
       }
-      stickyMouseUp()
-      e.stopPropagation()
-    })
+    )
 
     document.body.append(container)
     // ---- other code
@@ -214,6 +188,72 @@
       el.innerHTML = children
     }
     return el
+  }
+
+  function excludeClick(included, excluded, onClick) {
+    const _data = {
+      excludeDown: false,
+      inIncluded: false,
+      inExcluded: false
+    }
+    excluded.addEventListener('mousedown', () => (_data.excludeDown = true))
+    excluded.addEventListener('mouseup', () => (_data.excludeDown = false))
+    excluded.addEventListener('mouseenter', () => (_data.inExcluded = true))
+    excluded.addEventListener('mouseleave', () => (_data.inExcluded = false))
+    included.addEventListener('mouseenter', () => (_data.inIncluded = true))
+    included.addEventListener('mouseleave', () => (_data.inIncluded = false))
+    included.addEventListener('click', (e) => {
+      if (_data.inIncluded && !_data.inExcluded) {
+        if (_data.excludeDown) {
+          _data.excludeDown = false
+        } else {
+          onClick?.(e)
+        }
+      }
+    })
+  }
+
+  function withDrag(el, onMove, onClick) {
+    const _data = {
+      outerHeight: 0,
+      innerOffsetY: 0,
+      justClick: false
+    }
+
+    const onElMouseMove = (e) => {
+      _data.justClick = false
+      onMove?.(e, _data)
+    }
+
+    const onElMouseUp = leftKey(() => {
+      document.removeEventListener('mousemove', onElMouseMove)
+      document.removeEventListener('mouseup', onElMouseUp)
+    })
+
+    el.addEventListener(
+      'mousedown',
+      leftKey((e) => {
+        _data.justClick = true
+        const elComputedStyle = window.getComputedStyle(el)
+        _data.innerOffsetY = e.pageY - getNumber(elComputedStyle.top)
+        _data.outerHeight =
+          el.clientHeight + getNumber(elComputedStyle.borderTopWidth) + getNumber(elComputedStyle.borderBottomWidth)
+        document.addEventListener('mousemove', onElMouseMove)
+        document.addEventListener('mouseup', onElMouseUp)
+      })
+    )
+
+    el.addEventListener(
+      'mouseup',
+      leftKey((e) => {
+        if (_data.justClick) {
+          onClick?.(e, _data)
+          _data.justClick = false
+        }
+        onElMouseUp()
+        e.stopPropagation()
+      })
+    )
   }
 
   function leftKey(fn) {
