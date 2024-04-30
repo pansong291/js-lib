@@ -3,7 +3,7 @@
 // @description     Insert a sidebar button and a popup window into the webpage.
 // @description:zh  向网页中插入一个侧边按钮和一个弹窗。
 // @namespace       https://github.com/pansong291/
-// @version         1.0.7
+// @version         1.0.8
 // @author          paso
 // @license         Apache-2.0
 
@@ -21,8 +21,44 @@
       font-weight: normal;
   }
   * {
-      all: revert;
+      animation: revert;
+      background: revert;
+      border: revert;
+      border-radius: revert;
+      box-shadow: revert;
       box-sizing: border-box;
+      color: revert;
+      cursor: revert;
+      display: revert;
+      flex: revert;
+      float: revert;
+      font: revert;
+      height: revert;
+      inset: revert;
+      letter-spacing: revert;
+      list-style: revert;
+      margin: revert;
+      mask: revert;
+      max-height: revert;
+      max-width: revert;
+      min-height: revert;
+      min-width: revert;
+      offset: revert;
+      opacity: revert;
+      outline: revert;
+      overflow: revert;
+      overscroll-behavior: revert;
+      padding: revert;
+      pointer-events: revert;
+      position: revert;
+      text-shadow: revert;
+      text-transform: revert;
+      transform: revert;
+      transition: revert;
+      user-select: revert;
+      visibility: revert;
+      width: revert;
+      z-index: revert;
   }
   *::before, *::after {
       content: none;
