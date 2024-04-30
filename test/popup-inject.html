@@ -14,7 +14,7 @@
         location: '30%',
         collapse: '80%',
         content: `<button class="button" type="button">Random</button>
-            <div class="container"></div>`,
+            <div class="container monospace"></div>`,
         onPopShow() {
           console.log('popup show')
         },
@@ -23,7 +23,7 @@
         }
       })
       .then((result) => {
-        const { popup } = result
+        const { popup } = result.elem
         const container = popup.querySelector('.container')
         popup.querySelector('.button').onclick = () => {
           container.insertAdjacentHTML('beforeend', `<p>${Math.random()}</p>`)
