@@ -1,35 +1,68 @@
 // @name            cross-origin-storage
 // @name:zh         跨域本地存储
 // @namespace       https://github.com/pansong291/
-// @version         1.0.1
+// @version         1.0.2
 // @author          paso
 // @license         Apache-2.0
 
-;(function () {
+;(function() {
   'use strict'
 
   const __msgType = 'cross-origin-storage'
 
   /**
    * 生成随机ID
+   * @returns {string}
    */
   function uuid() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       const r = (Math.random() * 16) | 0,
         v = c === 'x' ? r : (r & 0x3) | 0x8
       return v.toString(16)
     })
   }
 
-  function createStorageClient(middlewareUrl) {
+  /**
+   * @param {WindowProxy} win
+   * @param {*} msg
+   */
+  function sendMsgTo(win, msg) {
+    win.postMessage(msg, '*')
+  }
+
+  /**
+   * @param {WindowProxy} win
+   * @param {(e: MessageEvent) => void} handler
+   */
+  function onReceive(win, handler) {
+    win.addEventListener('message', handler)
+  }
+
+  /**
+   * @param {string} middlewareUrl
+   */
+  function createStorage(middlewareUrl) {
     const iframe = document.createElement('iframe')
     iframe.src = middlewareUrl
     iframe.setAttribute('style', 'display: none !important;')
     window.document.body.appendChild(iframe)
-    return startStorageClient(iframe.contentWindow)
+    return startStorage(iframe.contentWindow, window)
   }
 
-  function startStorageClient(iframeWindow) {
+  /**
+   * @param {WindowProxy} serverWindow
+   * @param {WindowProxy} clientWindow
+   */
+  function startStorage(serverWindow, clientWindow) {
+    startStorageServer(serverWindow, clientWindow)
+    return startStorageClient(serverWindow, clientWindow)
+  }
+
+  /**
+   * @param {WindowProxy} serverWindow
+   * @param {WindowProxy} clientWindow
+   */
+  function startStorageClient(serverWindow, clientWindow) {
     const _requests = {} // 所有请求消息数据映射
     // Server 是否已准备完成以及缓存的请求队列
     const _cache = {
@@ -37,13 +70,13 @@
       queue: []
     }
     // 监听 Server 发来的消息
-    window.addEventListener('message', (e) => {
+    onReceive(clientWindow, (e) => {
       if (e?.data?.__msgType !== __msgType) return
       if (e.data.ready) {
         // Server 已准备完成, 发送队列中的全部请求
         _cache.ready = true
         while (_cache.queue.length) {
-          iframeWindow.postMessage(_cache.queue.shift(), '*')
+          sendMsgTo(serverWindow, _cache.queue.shift())
         }
         return
       }
@@ -78,7 +111,7 @@
 
         if (_cache.ready) {
           // Server 已准备完成时直接发请求
-          iframeWindow.postMessage(req, '*')
+          sendMsgTo(serverWindow, req)
         } else {
           // Server 未准备完成则把请求放入队列
           _cache.queue.push(req)
@@ -97,7 +130,7 @@
       /**
        * 更新存储数据
        * @param {Object | string} key
-       * @param {?Object | ?string} value
+       * @param {Object | string} [value = undefined]
        */
       setItem(key, value = void 0) {
         return _requestFn('set', key, value)
@@ -118,8 +151,11 @@
     }
   }
 
-  function startStorageServer() {
-    if (window.parent === window) return
+  /**
+   * @param {WindowProxy} serverWindow
+   * @param {WindowProxy} clientWindow
+   */
+  function startStorageServer(serverWindow, clientWindow) {
     const functionMap = {
       /**
        * 设置数据
@@ -174,7 +210,7 @@
     }
 
     // 监听 Client 消息
-    window.addEventListener('message', (e) => {
+    onReceive(serverWindow, (e) => {
       if (e?.data?.__msgType !== __msgType) return
       const { method, key, value, id = 'default' } = e.data
 
@@ -188,31 +224,16 @@
       if (!func) response.errorMsg = 'Request method error!'
 
       // 发送给 Client
-      window.parent.postMessage(
-        {
-          id,
-          request: e.data,
-          response,
-          __msgType
-        },
-        '*'
-      )
+      sendMsgTo(clientWindow, { id, request: e.data, response, __msgType })
     })
 
     // 通知 Client, Server 已经准备完成
-    window.parent.postMessage(
-      {
-        ready: true,
-        __msgType
-      },
-      '*'
-    )
+    sendMsgTo(clientWindow, { ready: true, __msgType })
   }
 
   if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
   window.paso.crossOriginStorage = {
-    startStorageServer,
-    startStorageClient,
-    createStorageClient
+    startStorage,
+    createStorage
   }
 })()

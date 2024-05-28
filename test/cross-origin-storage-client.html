@@ -20,7 +20,7 @@
   const resultPre = document.getElementById('result')
   const { crossOriginStorage } = window.paso
   const middlewareUrl = 'cross-origin-storage-server.html'
-  const storageClient = crossOriginStorage.createStorageClient(middlewareUrl)
+  const storageClient = crossOriginStorage.createStorage(middlewareUrl)
   storageClient.setItem('person-name', '小明').then(() => {
     resultPre.append('存入数据 person-name: 小明\n')
   })
