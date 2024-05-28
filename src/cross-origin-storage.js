@@ -1,7 +1,7 @@
 // @name            cross-origin-storage
 // @name:zh         跨域本地存储
 // @namespace       https://github.com/pansong291/
-// @version         1.0.2
+// @version         1.0.3
 // @author          paso
 // @license         Apache-2.0
 
@@ -31,50 +31,40 @@
   }
 
   /**
-   * @param {WindowProxy} win
    * @param {(e: MessageEvent) => void} handler
    */
-  function onReceive(win, handler) {
-    win.addEventListener('message', handler)
+  function onReceive(handler) {
+    window.addEventListener('message', handler)
   }
 
   /**
-   * @param {string} middlewareUrl
+   * @param {string} serverUrl
    */
-  function createStorage(middlewareUrl) {
-    const iframe = document.createElement('iframe')
-    iframe.src = middlewareUrl
-    iframe.setAttribute('style', 'display: none !important;')
-    window.document.body.appendChild(iframe)
-    return startStorage(iframe.contentWindow, window)
-  }
-
-  /**
-   * @param {WindowProxy} serverWindow
-   * @param {WindowProxy} clientWindow
-   */
-  function startStorage(serverWindow, clientWindow) {
-    startStorageServer(serverWindow, clientWindow)
-    return startStorageClient(serverWindow, clientWindow)
+  function createStorageClient(serverUrl) {
+    const serverIframe = document.createElement('iframe')
+    serverIframe.src = serverUrl
+    serverIframe.setAttribute('style', 'display: none !important;')
+    window.document.body.appendChild(serverIframe)
+    return startStorageClient(serverIframe.contentWindow)
   }
 
   /**
    * @param {WindowProxy} serverWindow
-   * @param {WindowProxy} clientWindow
    */
-  function startStorageClient(serverWindow, clientWindow) {
-    const _requests = {} // 所有请求消息数据映射
-    // Server 是否已准备完成以及缓存的请求队列
+  function startStorageClient(serverWindow) {
+    // 所有请求消息数据映射
+    const _requests = {}
+    // 与 Server 的连接是否已建立完成以及缓存的请求队列
     const _cache = {
-      ready: false,
+      connected: false,
       queue: []
     }
     // 监听 Server 发来的消息
-    onReceive(clientWindow, (e) => {
+    onReceive((e) => {
       if (e?.data?.__msgType !== __msgType) return
-      if (e.data.ready) {
-        // Server 已准备完成, 发送队列中的全部请求
-        _cache.ready = true
+      if (e.data.connected) {
+        // 连接已建立完成, 发送队列中的全部请求
+        _cache.connected = true
         while (_cache.queue.length) {
           sendMsgTo(serverWindow, _cache.queue.shift())
         }
@@ -89,6 +79,15 @@
       currentCallback(response, e.data)
       delete _requests[id]
     })
+
+    // 请求与 Server 建立连接
+    const loopId = setInterval(() => {
+      if (_cache.connected) {
+        clearInterval(loopId)
+        return
+      }
+      sendMsgTo(serverWindow, { connect: 1, __msgType })
+    }, 500)
 
     /**
      * 发起请求函数
@@ -109,11 +108,11 @@
         // 请求唯一标识 id 和回调函数的映射
         _requests[req.id] = resolve
 
-        if (_cache.ready) {
-          // Server 已准备完成时直接发请求
+        if (_cache.connected) {
+          // 连接建立完成时直接发请求
           sendMsgTo(serverWindow, req)
         } else {
-          // Server 未准备完成则把请求放入队列
+          // 连接未建立则把请求放入队列
           _cache.queue.push(req)
         }
       })
@@ -151,11 +150,7 @@
     }
   }
 
-  /**
-   * @param {WindowProxy} serverWindow
-   * @param {WindowProxy} clientWindow
-   */
-  function startStorageServer(serverWindow, clientWindow) {
+  function startStorageServer() {
     const functionMap = {
       /**
        * 设置数据
@@ -208,10 +203,17 @@
         localStorage.clear()
       }
     }
+    const clients = new Set()
 
     // 监听 Client 消息
-    onReceive(serverWindow, (e) => {
+    onReceive((e) => {
       if (e?.data?.__msgType !== __msgType) return
+      if (e.data.connect) {
+        clients.add(e.source)
+        // 通知 Client, 连接建立完成
+        sendMsgTo(e.source, { connected: true, __msgType })
+        return
+      }
       const { method, key, value, id = 'default' } = e.data
 
       // 获取方法
@@ -224,16 +226,15 @@
       if (!func) response.errorMsg = 'Request method error!'
 
       // 发送给 Client
-      sendMsgTo(clientWindow, { id, request: e.data, response, __msgType })
+      const resultMsg = { id, request: e.data, response, __msgType }
+      clients.forEach((c) => sendMsgTo(c, resultMsg))
     })
-
-    // 通知 Client, Server 已经准备完成
-    sendMsgTo(clientWindow, { ready: true, __msgType })
   }
 
   if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
   window.paso.crossOriginStorage = {
-    startStorage,
-    createStorage
+    startStorageServer,
+    startStorageClient,
+    createStorageClient
   }
 })()
