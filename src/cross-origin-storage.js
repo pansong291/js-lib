@@ -1,7 +1,7 @@
 // @name            cross-origin-storage
 // @name:zh         跨域本地存储
 // @namespace       https://github.com/pansong291/
-// @version         1.0.3
+// @version         1.0.4
 // @author          paso
 // @license         Apache-2.0
 
@@ -45,18 +45,24 @@
     serverIframe.src = serverUrl
     serverIframe.setAttribute('style', 'display: none !important;')
     window.document.body.appendChild(serverIframe)
-    return startStorageClient(serverIframe.contentWindow)
+    return startStorageClient(serverIframe.contentWindow, 10_000)
   }
 
   /**
    * @param {WindowProxy} serverWindow
+   * @param {number} [timeout]
    */
-  function startStorageClient(serverWindow) {
+  function startStorageClient(serverWindow, timeout) {
     // 所有请求消息数据映射
     const _requests = {}
-    // 与 Server 的连接是否已建立完成以及缓存的请求队列
     const _cache = {
+      // 开始建立连接的时间
+      startTime: 0,
+      // 与 Server 的连接是否已建立完成
       connected: false,
+      // 连接是否超时
+      timeout: false,
+      // 缓存的请求队列
       queue: []
     }
     // 监听 Server 发来的消息
@@ -70,13 +76,9 @@
         }
         return
       }
-      let { id, response } = e.data
-
-      // 找到消息对应的回调函数
-      let currentCallback = _requests[id]
-      if (!currentCallback) return
-      // 调用并返回数据
-      currentCallback(response, e.data)
+      const { id, response } = e.data
+      // 找到消息对应的回调函数，调用并传递数据
+      _requests[id]?.resolve(response)
       delete _requests[id]
     })
 
@@ -85,6 +87,20 @@
       if (_cache.connected) {
         clearInterval(loopId)
         return
+      }
+      if (!_cache.startTime) {
+        _cache.startTime = Date.now()
+      } else if (timeout && timeout > 0) {
+        if (Date.now() - _cache.startTime > timeout) {
+          _cache.timeout = true
+          clearInterval(loopId)
+          while (_cache.queue.length) {
+            const reqId = _cache.queue.shift().id
+            _requests[reqId]?.reject('connection timeout')
+            delete _requests[reqId]
+          }
+          return
+        }
       }
       sendMsgTo(serverWindow, { connect: 1, __msgType })
     }, 500)
@@ -96,7 +112,7 @@
      * @param value
      */
     function _requestFn(method, key, value) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const req = {
           id: uuid(),
           method,
@@ -106,11 +122,14 @@
         }
 
         // 请求唯一标识 id 和回调函数的映射
-        _requests[req.id] = resolve
+        _requests[req.id] = { resolve, reject }
 
         if (_cache.connected) {
           // 连接建立完成时直接发请求
           sendMsgTo(serverWindow, req)
+        } else if (_cache.timeout) {
+          // 连接超时拒绝请求
+          reject('connection timeout')
         } else {
           // 连接未建立则把请求放入队列
           _cache.queue.push(req)
