@@ -1,3 +1,10 @@
+// @name            cross-origin-storage
+// @name:zh         跨域本地存储
+// @namespace       https://github.com/pansong291/
+// @version         1.0.1
+// @author          paso
+// @license         Apache-2.0
+
 ;(function () {
   'use strict'
 
@@ -15,14 +22,20 @@
   }
 
   function createStorageClient(middlewareUrl) {
+    const iframe = document.createElement('iframe')
+    iframe.src = middlewareUrl
+    iframe.setAttribute('style', 'display: none !important;')
+    window.document.body.appendChild(iframe)
+    return startStorageClient(iframe.contentWindow)
+  }
+
+  function startStorageClient(iframeWindow) {
     const _requests = {} // 所有请求消息数据映射
     // Server 是否已准备完成以及缓存的请求队列
     const _cache = {
       ready: false,
       queue: []
     }
-    // 获取 Server window 对象
-    const _serverWindow = _createIframe(middlewareUrl).contentWindow
     // 监听 Server 发来的消息
     window.addEventListener('message', (e) => {
       if (e?.data?.__msgType !== __msgType) return
@@ -30,7 +43,7 @@
         // Server 已准备完成, 发送队列中的全部请求
         _cache.ready = true
         while (_cache.queue.length) {
-          _serverWindow.postMessage(_cache.queue.shift(), '*')
+          iframeWindow.postMessage(_cache.queue.shift(), '*')
         }
         return
       }
@@ -43,19 +56,6 @@
       currentCallback(response, e.data)
       delete _requests[id]
     })
-
-    /**
-     * 创建 iframe 标签
-     * @param {string} middlewareUrl
-     * @return Object
-     */
-    function _createIframe(middlewareUrl) {
-      const iframe = document.createElement('iframe')
-      iframe.src = middlewareUrl
-      iframe.setAttribute('style', 'display: none !important;')
-      window.document.body.appendChild(iframe)
-      return iframe
-    }
 
     /**
      * 发起请求函数
@@ -78,7 +78,7 @@
 
         if (_cache.ready) {
           // Server 已准备完成时直接发请求
-          _serverWindow.postMessage(req, '*')
+          iframeWindow.postMessage(req, '*')
         } else {
           // Server 未准备完成则把请求放入队列
           _cache.queue.push(req)
@@ -212,6 +212,7 @@
   if (!window.paso || !(window.paso instanceof Object)) window.paso = {}
   window.paso.crossOriginStorage = {
     startStorageServer,
+    startStorageClient,
     createStorageClient
   }
 })()
