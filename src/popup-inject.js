@@ -3,7 +3,7 @@
 // @description     Insert a sidebar button and a popup window into the webpage.
 // @description:zh  向网页中插入一个侧边按钮和一个弹窗。
 // @namespace       https://github.com/pansong291/
-// @version         1.0.9
+// @version         1.0.10
 // @author          paso
 // @license         Apache-2.0
 
@@ -34,21 +34,31 @@
  * }} func
  */
 /**
- * @typedef {(tag: string, attrs?: Record<string, string>, children?: string | (Node | string)[]) => HTMLElement} CreateElementFunction
+ * @callback CreateElementFunction
+ * @param {string} tag
+ * @param {Record<string, string>} [attrs]
+ * @param {string | (Node | string)[]} [children]
+ * @returns {HTMLElement}
  */
 /**
- * @typedef {(included: HTMLElement, excluded: HTMLElement, onClick?: EventListener) => void} ExcludeClickFuction
+ * @callback ExcludeClickFuction
+ * @param {HTMLElement} included
+ * @param {HTMLElement} execluded
+ * @param {EventListener} [onClick]
+ * @returns {void}
  */
 /**
  * @template {Function} T
- * @typedef {(fn: T) => T} LeftKeyFunction
+ * @callback LeftKeyFunction
+ * @param {T} fn
+ * @returns {T}
  */
 /**
  * @typedef {(str?: string) => number | undefined} GetNumberFunction
  */
 ;(function () {
   'use strict'
-  const version = 'v1.0.9'
+  const version = 'v1.0.10'
 
   /**
    * @type CreateElementFunction
@@ -126,18 +136,22 @@
    * @param {HTMLElement} el
    * @param {(e: MouseEvent, d: WithDragData) => void} [onMove]
    * @param {(e: MouseEvent, d: WithDragData) => void} [onClick]
+   * @param {number} [threshold=2]
    */
-  const withDrag = (el, onMove, onClick) => {
+  const withDrag = (el, onMove, onClick, threshold = 2) => {
     /**
      * @typedef {{innerOffsetY: number, outerHeight: number, justClick: boolean}} WithDragData
      */
     const _data = {
+      startPageX: 0,
+      startPageY: 0,
       outerHeight: 0,
       innerOffsetY: 0,
       justClick: false
     }
 
     const onElMouseMove = (e) => {
+      if (Math.abs(e.pageX - _data.startPageX) <= threshold && Math.abs(e.pageY - _data.startPageY) <= threshold) return
       _data.justClick = false
       onMove?.(e, _data)
     }
@@ -151,6 +165,8 @@
       'mousedown',
       leftKey((e) => {
         _data.justClick = true
+        _data.startPageX = e.pageX
+        _data.startPageY = e.pageY
         const elComputedStyle = window.getComputedStyle(el)
         _data.innerOffsetY = e.pageY - getNumber(elComputedStyle.top)
         _data.outerHeight =
@@ -367,7 +383,7 @@
   const _injectHtml = (config, resolve) => {
     const anchorId = 'x' + Math.floor(Math.random() * 100_000_000).toString(16)
     const styleContent = addCSSAncestor(getBaseStyle(config).replaceAll(/<\/?style>/g, ''), `#${anchorId}`)
-    document.head.insertAdjacentHTML('beforeend', `<style data-namespace='${config.namespace}'>${styleContent}</style>`)
+    document.head.append(createElement('style', { 'data-namespace': config.namespace }, [styleContent]))
     const stickyBar = createElement('div', { class: 'sticky-bar' }, config.actionName)
     const popup = createElement('div', { class: 'popup flex col' }, config.content)
     const mask = createElement('div', { class: 'mask' }, [popup])
