@@ -3,7 +3,7 @@
 // @description     Insert a sidebar button and a popup window into the webpage.
 // @description:zh  向网页中插入一个侧边按钮和一个弹窗。
 // @namespace       https://github.com/pansong291/
-// @version         1.0.10
+// @version         1.1.0
 // @author          paso
 // @license         Apache-2.0
 
@@ -37,7 +37,7 @@
  * @callback CreateElementFunction
  * @param {string} tag
  * @param {Record<string, string>} [attrs]
- * @param {string | (Node | string)[]} [children]
+ * @param {Node | string | (Node | string)[]} [children]
  * @returns {HTMLElement}
  */
 /**
@@ -58,7 +58,7 @@
  */
 ;(function () {
   'use strict'
-  const version = 'v1.0.10'
+  const version = 'v1.1.0'
 
   /**
    * @type CreateElementFunction
@@ -70,6 +70,8 @@
       el.append.apply(el, children)
     } else if (typeof children === 'string') {
       el.innerHTML = children
+    } else if (typeof children === 'object' && children instanceof Node) {
+      el.appendChild(children)
     }
     return el
   }
@@ -191,204 +193,160 @@
 
   /**
    * @param {PopupInjectConfig} config
+   * @param {string} anchorId
    * @returns {string}
    */
-  const getBaseStyle = (config) => `
+  const getStyleContent = (config, anchorId) => {
+    const baseStyle = `
 <style>
-  :not(svg *) {
-      align-content: revert;
-      align-items: revert;
-      align-self: revert;
-      animation: revert;
-      background: revert;
-      border: revert;
-      border-radius: revert;
-      box-shadow: revert;
-      box-sizing: border-box;
-      color: inherit;
-      cursor: inherit;
-      display: revert;
-      flex: revert;
-      float: revert;
-      font: inherit;
-      height: revert;
-      inset: revert;
-      justify-content: revert;
-      justify-items: revert;
-      justify-self: revert;
-      letter-spacing: inherit;
-      list-style: inherit;
-      margin: revert;
-      mask: revert;
-      max-height: revert;
-      max-width: revert;
-      min-height: revert;
-      min-width: revert;
-      offset: revert;
-      opacity: revert;
-      outline: revert;
-      overflow: revert;
-      overscroll-behavior: revert;
-      padding: revert;
-      pointer-events: inherit;
-      position: revert;
-      text-align: inherit;
-      text-shadow: inherit;
-      text-transform: inherit;
-      transform: revert;
-      transition: revert;
-      user-select: revert;
-      visibility: inherit;
-      width: revert;
-      z-index: revert;
-  }
-  *::before, *::after {
-      content: none;
+  * {
+    box-sizing: border-box;
   }
   *::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+    width: 8px;
+    height: 8px;
   }
   *::-webkit-scrollbar-thumb {
-      border-radius: 4px;
-      background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   *::-webkit-scrollbar-track {
-      border-radius: 4px;
-      background-color: transparent;
+    border-radius: 4px;
+    background-color: transparent;
   }
   .flex {
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
-      justify-content: flex-start;
+    display: flex;
   }
   .flex.col {
-      flex-direction: column;
+    flex-direction: column;
   }
   .container {
-      all: revert;
-      color: black;
-      font-size: 14px;
-      line-height: 1.5;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-      font-style: normal;
-      font-weight: normal;
+    color: black;
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   }
   .monospace {
-      font-family: v-mono, "JetBrains Mono", Consolas, SFMono-Regular, Menlo, Courier, v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, monospace, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: v-mono, "JetBrains Mono", Consolas, SFMono-Regular, Menlo, Courier, v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, monospace, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   }
   .sticky-bar {
-      position: fixed;
-      top: ${config.location};
-      left: 0;
-      transform: translateX(calc(12px - ${config.collapse}));
-      z-index: 99999999;
-      background: #3d7fff;
-      color: white;
-      padding: 4px 12px 4px 6px;
-      cursor: pointer;
-      user-select: none;
-      border-radius: 0 12px 12px 0;
-      box-shadow: 0 2px 4px 1px #0006;
-      transition: transform 0.5s ease;
+    position: fixed;
+    top: ${config.location};
+    left: 0;
+    transform: translateX(calc(12px - ${config.collapse}));
+    z-index: 99999999;
+    background: #3d7fff;
+    color: white;
+    padding: 4px 12px 4px 6px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 2px 4px 1px #0006;
+    transition: transform 0.5s ease;
   }
   .sticky-bar:hover {
-      transform: none;
+    transform: translateX(0);
   }
   .mask {
-      position: fixed;
-      inset: 0;
-      padding: 24px;
-      overflow: auto;
-      z-index: 99999999;
-      background-color: rgba(0, 0, 0, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .6s;
+    position: fixed;
+    inset: 0;
+    padding: 24px;
+    overflow: auto;
+    z-index: 99999999;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .6s;
   }
   .container.open .mask {
-      opacity: 1;
-      pointer-events: all;
+    opacity: 1;
+    pointer-events: all;
   }
   .popup {
-      position: relative;
-      margin: auto;
-      padding: 16px;
-      background: #f0f2f5;
-      border-radius: 2px;
-      box-shadow: 0 1px 12px 2px rgba(0, 0, 0, 0.4);
-      transform: scale(0);
-      transition: transform .3s;
+    position: relative;
+    margin: auto;
+    padding: 16px;
+    background: #f0f2f5;
+    border-radius: 2px;
+    box-shadow: 0 1px 12px 2px rgba(0, 0, 0, 0.4);
+    transform: scale(0);
+    transition: transform .3s;
   }
   .container.open .popup {
-      transform: scale(1);
+    transform: scale(1);
   }
   label {
-      user-select: none;
+    user-select: none;
   }
   textarea {
-      resize: vertical;
+    resize: vertical;
   }
   .input, .button {
-      height: 32px;
-      transition: all 0.3s, height 0s;
+    height: 32px;
+    transition: all 0.3s, height 0s;
   }
   .button {
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px 16px;
-      color: #fff;
-      border: none;
-      border-radius: 2px;
-      background: #3d7fff;
-      text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
-      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 16px;
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    background: #3d7fff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
   }
   .button:hover, .button:focus {
-      border-color: #669eff;
-      background: #669eff;
+    border-color: #669eff;
+    background: #669eff;
   }
   .button:active {
-      border-color: #295ed9;
-      background: #295ed9;
+    border-color: #295ed9;
+    background: #295ed9;
   }
   .input {
-      padding: 4px 8px;
-      background: white;
-      border: 1px solid #d9d9d9;
-      border-radius: 2px;
+    padding: 4px 8px;
+    background: white;
+    border: 1px solid #d9d9d9;
+    border-radius: 2px;
   }
   .input:hover, .input:focus {
-      border-color: #669eff;
+    border-color: #669eff;
   }
   .input:focus-visible {
-      outline: none;
+    outline: none;
   }
   .input:focus {
-      box-shadow: 0 0 0 2px rgba(61, 127, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(61, 127, 255, 0.2);
   }
-  ${config.style}
-</style>`
+</style>`.replaceAll(/<\/?style>/g, '')
+    const configStyle = addCSSAncestor(config.style.replaceAll(/<\/?style>/g, ''), '#' + anchorId)
+    return baseStyle + configStyle
+  }
 
   /**
    * @param {PopupInjectConfig} config
    * @param {(value: PopupInjectResult) => void} resolve
    */
   const _injectHtml = (config, resolve) => {
+    const endpoint = createElement('div', { style: 'all: initial', 'data-namespace': config.namespace, 'data-version': version })
+    const shadowRoot = endpoint.attachShadow({ mode: 'open' })
+
     const anchorId = 'x' + Math.floor(Math.random() * 100_000_000).toString(16)
-    const styleContent = addCSSAncestor(getBaseStyle(config).replaceAll(/<\/?style>/g, ''), `#${anchorId}`)
-    document.head.append(createElement('style', { 'data-namespace': config.namespace }, [styleContent]))
+    const styleContent = getStyleContent(config, anchorId)
+    shadowRoot.append(createElement('style', { 'data-namespace': config.namespace }, [styleContent]))
+
     const stickyBar = createElement('div', { class: 'sticky-bar' }, config.actionName)
     const popup = createElement('div', { class: 'popup flex col' }, config.content)
     const mask = createElement('div', { class: 'mask' }, [popup])
     const container = createElement('div', { class: 'container' }, [stickyBar, mask])
-    const anchor = createElement('div', { id: anchorId, 'data-namespace': config.namespace, 'data-version': version }, [container])
+    const anchor = createElement('div', { id: anchorId }, [container])
+    shadowRoot.append(anchor)
 
     excludeClick(mask, popup, () => {
       container.classList.remove('open')
@@ -412,7 +370,7 @@
       }
     )
 
-    document.body.append(anchor)
+    document.documentElement.append(endpoint)
     // ---- other code
     resolve?.({
       elem: {
@@ -432,6 +390,7 @@
     if (!config) throw new Error('config is required. you should call window.paso.injectPopup(config)')
     if (!config.namespace) throw new Error('config.namespace is required and it cannot be empty.')
     if (!/^[-\w]+$/.test(config.namespace)) throw new Error('config.namespace must match the regex /^[-\\w]+$/.')
+    config.style = config.style || ''
     return config
   }
 
