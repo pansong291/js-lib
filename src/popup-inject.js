@@ -3,7 +3,7 @@
 // @description     Insert a sidebar button and a popup window into the webpage.
 // @description:zh  向网页中插入一个侧边按钮和一个弹窗。
 // @namespace       https://github.com/pansong291/
-// @version         1.1.0
+// @version         1.1.1
 // @author          paso
 // @license         Apache-2.0
 
@@ -58,7 +58,7 @@
  */
 ;(function () {
   'use strict'
-  const version = 'v1.1.0'
+  const version = 'v1.1.1'
 
   /**
    * @type CreateElementFunction
@@ -285,6 +285,7 @@
     resize: vertical;
   }
   .input, .button {
+    font: inherit;
     height: 32px;
     transition: all 0.3s, height 0s;
   }
